@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { useSession, signOut } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import Avatar from '@/components/ui/Avatar';
 import NotificationBell from '@/components/notifications/NotificationBell';
+import SearchBar from '@/components/search/SearchBar';
 import {
-  Search,
   Menu,
   X,
   ChevronDown,
@@ -23,9 +22,7 @@ const navLinks = [
 
 export default function Header() {
   const { data: session, status } = useSession();
-  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -39,14 +36,7 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/companies?q=${encodeURIComponent(searchQuery.trim())}`);
-      setSearchQuery('');
-      setMobileMenuOpen(false);
-    }
-  };
+  const closeMobileMenu = () => setMobileMenuOpen(false);
 
   const handleSignOut = async () => {
     await signOut({ callbackUrl: '/' });
@@ -67,21 +57,27 @@ export default function Header() {
           </span>
         </Link>
 
-        {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href + link.label}
-              href={link.href}
-              className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        {/* Desktop Nav + Search */}
+        <div className="hidden lg:flex items-center gap-6 flex-1 max-w-2xl mx-8">
+          <nav className="flex items-center gap-6 shrink-0">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href + link.label}
+                href={link.href}
+                className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors whitespace-nowrap"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+          <SearchBar
+            placeholder="Search company or category"
+            className="flex-1 min-w-[240px]"
+          />
+        </div>
 
         {/* Desktop Actions */}
-        <div className="hidden lg:flex items-center gap-2.5">
+        <div className="hidden lg:flex items-center gap-2.5 shrink-0">
           {status === 'authenticated' && <NotificationBell />}
 
           {status === 'authenticated' ? (
@@ -156,24 +152,19 @@ export default function Header() {
           </div>
           <div className="flex flex-col gap-1">
             {/* Mobile Search */}
-            <form onSubmit={handleSearch} className="mb-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--text-muted)]" />
-                <input
-                  type="text"
-                  placeholder="Search companies..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 text-sm rounded-[var(--radius-md)] border border-[var(--border-md)] bg-[var(--bg)] focus:bg-white focus:border-accent focus:outline-none transition-colors"
-                />
-              </div>
-            </form>
+            <div className="mb-4">
+              <SearchBar
+                placeholder="Search company or category"
+                variant="minimal"
+                onNavigate={closeMobileMenu}
+              />
+            </div>
 
             {navLinks.map((link) => (
               <Link
                 key={link.href + link.label}
                 href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={closeMobileMenu}
                 className="px-4 py-3 rounded-[var(--radius-md)] text-base font-medium text-[var(--text-secondary)] hover:bg-[var(--teal-50)] hover:text-[var(--accent)] transition-all"
               >
                 {link.label}
@@ -186,13 +177,13 @@ export default function Header() {
               <>
                 <Link
                   href="/profile"
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={closeMobileMenu}
                   className="px-4 py-3 rounded-[var(--radius-md)] text-base font-medium text-[var(--text-secondary)] hover:bg-[var(--gray-50)] transition-all"
                 >
                   My Profile
                 </Link>
                 <button
-                  onClick={() => { handleSignOut(); setMobileMenuOpen(false); }}
+                  onClick={() => { handleSignOut(); closeMobileMenu(); }}
                   className="px-4 py-3 rounded-[var(--radius-md)] text-base font-medium text-[var(--coral-400)] hover:bg-[var(--coral-50)] transition-all w-full text-left"
                 >
                   Sign Out
@@ -202,14 +193,14 @@ export default function Header() {
               <>
                 <Link
                   href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={closeMobileMenu}
                   className="px-4 py-3 rounded-[var(--radius-md)] text-base font-medium text-[var(--text-secondary)] hover:bg-[var(--gray-50)] transition-all"
                 >
                   Log In
                 </Link>
                 <Link
                   href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={closeMobileMenu}
                   className="mt-2 w-full btn btn-primary text-center justify-center py-3"
                 >
                   Sign up free

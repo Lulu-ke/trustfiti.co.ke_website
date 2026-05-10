@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import useSWR from 'swr';
 import CompanyCard from '@/components/companies/CompanyCard';
 import Pagination from '@/components/ui/Pagination';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { Search, SlidersHorizontal, Building2 } from 'lucide-react';
+import SearchBar from '@/components/search/SearchBar';
+import { SlidersHorizontal, Building2 } from 'lucide-react';
 import type { Company, Pagination as PaginationType } from '@/types';
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -27,6 +28,15 @@ export default function CompaniesPage() {
   const [sortBy, setSortBy] = useState((sortParam as string) || 'rating');
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+
+  // Sync URL params to state on navigation
+  useEffect(() => {
+    setSearchQuery((q as string) || '');
+    setSelectedIndustry((industry as string) || '');
+    setSelectedCity((city as string) || '');
+    setSortBy((sortParam as string) || 'rating');
+    setPage(1);
+  }, [q, industry, city, sortParam]);
 
   const params = new URLSearchParams({
     page: page.toString(),
@@ -86,18 +96,12 @@ export default function CompaniesPage() {
 
             {/* Search & Sort Bar */}
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
-              <form onSubmit={handleSearch} className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search companies by name..."
-                    className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-gray-300 bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none transition-colors"
-                  />
-                </div>
-              </form>
+              <div className="flex-1">
+                <SearchBar
+                  placeholder="Search companies by name..."
+                  onNavigate={() => {}}
+                />
+              </div>
 
               <div className="flex gap-3">
                 <select

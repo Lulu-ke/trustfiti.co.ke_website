@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import useSWR from 'swr';
 import CompanyCard from '@/components/companies/CompanyCard';
 import ReviewCard from '@/components/reviews/ReviewCard';
+import SearchBar from '@/components/search/SearchBar';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import {
   Search,
@@ -75,10 +75,6 @@ const trustBarItems = [
 // =============================================
 
 export default function HomePage() {
-  const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
-  const searchRef = useRef<HTMLDivElement>(null);
-
   const { data: companiesResponse, isLoading: companiesLoading } = useSWR(
     '/api/companies?sortBy=reviews&limit=6',
     (url: string) => fetch(url).then(res => res.json())
@@ -97,13 +93,6 @@ export default function HomePage() {
   const companies: Company[] = companiesResponse?.data || [];
   const reviews: Review[] = reviewsResponse?.data || [];
   const stats = statsResponse?.data;
-
-  const handleSearch = useCallback((e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/companies?q=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  }, [searchQuery, router]);
 
   const formatStat = (n: number | undefined): string => {
     if (!n) return '0';
@@ -197,18 +186,12 @@ export default function HomePage() {
             <h3 className="font-head text-xl font-bold text-[var(--text-primary)] mb-1.5">Find a company</h3>
             <p className="text-[13px] text-[var(--text-muted)] mb-5">Search by name, domain, or phone number</p>
 
-            <form onSubmit={handleSearch}>
-              <div className="search-input-wrap relative mb-3">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="e.g. Safaricom, Jumia, KCB Bank..."
-                  className="w-full"
-                />
-                <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[var(--text-muted)] pointer-events-none" />
-              </div>
-            </form>
+            <div className="mb-3">
+              <SearchBar
+                placeholder="e.g. Safaricom, Jumia, KCB Bank..."
+                variant="hero"
+              />
+            </div>
 
             <div className="grid grid-cols-2 gap-2 mb-4">
               <Link href="/reviews/write" className="search-action-btn">

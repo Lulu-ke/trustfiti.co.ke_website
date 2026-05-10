@@ -37,6 +37,7 @@ export const getReviewsSchema = z.object({
 });
 
 export const getCompaniesSchema = z.object({
+  q: z.string().optional(),
   search: z.string().optional(),
   industry: z.string().optional(),
   city: z.string().optional(),
@@ -44,4 +45,8 @@ export const getCompaniesSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(12),
   sortBy: z.enum(["rating", "reviews", "newest"]).default("rating"),
-});
+}).transform((data) => ({
+  // Support both `q` and `search` params; `q` takes priority
+  ...data,
+  search: data.q || data.search || undefined,
+}));
