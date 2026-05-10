@@ -2,9 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { timeAgo } from '@/lib/utils';
 import StarRating from '@/components/reviews/StarRating';
-import Avatar from '@/components/ui/Avatar';
-import Badge from '@/components/ui/Badge';
-import { Building2, ThumbsUp, BadgeCheck } from 'lucide-react';
+import { Building2, BadgeCheck } from 'lucide-react';
 import type { Review } from '@/types';
 
 interface ReviewCardProps {
@@ -14,174 +12,117 @@ interface ReviewCardProps {
   homepage?: boolean;
 }
 
+const avatarColors = [
+  { bg: '#E1F5EE', color: '#0F6E56' },
+  { bg: '#FAEEDA', color: '#854F0B' },
+  { bg: '#EEEDFE', color: '#534AB7' },
+  { bg: '#FAECE7', color: '#993C1D' },
+  { bg: '#EAF3DE', color: '#3B6D11' },
+  { bg: '#E6F1FB', color: '#185FA5' },
+];
+
 export default function ReviewCard({
   review,
   onFlag,
   showCompany = false,
   homepage = false,
 }: ReviewCardProps) {
-  const statusBadge: Record<string, { variant: 'success' | 'warning' | 'danger' | 'neutral'; label: string }> = {
-    PUBLISHED: { variant: 'success', label: 'Published' },
-    FEATURED: { variant: 'success', label: 'Featured' },
-    FLAGGED: { variant: 'warning', label: 'Flagged' },
-    HIDDEN: { variant: 'neutral', label: 'Hidden' },
-  };
-
-  const badgeInfo = review.isFeatured
-    ? { variant: 'info' as const, label: 'Featured' }
-    : statusBadge[review.status];
+  const reviewerName = review.reviewer?.fullName || 'Anonymous';
+  const initials = reviewerName.split(' ').map(n => n.charAt(0)).join('').toUpperCase().slice(0, 2);
+  const avatarColor = avatarColors[reviewerName.charCodeAt(0) % avatarColors.length];
 
   if (homepage) {
     return (
-      <article className="bg-white rounded-2xl border border-slate-100 p-6">
+      <article className="review-card">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white font-semibold text-sm">
-              {review.reviewer?.fullName?.charAt(0) || 'A'}
+        <div className="flex items-center gap-3 mb-4">
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+            style={{ background: avatarColor.bg, color: avatarColor.color }}
+          >
+            {initials}
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm font-medium text-[var(--text-primary)]">{reviewerName}</span>
+              {review.isVerified && <BadgeCheck className="w-3.5 h-3.5 text-accent" />}
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-slate-900">
-                  {review.reviewer?.fullName || 'Anonymous'}
-                </span>
-                {review.isVerified && (
-                  <BadgeCheck className="w-3.5 h-3.5 text-brand-500" />
-                )}
-              </div>
-              <span className="text-xs text-slate-400">{timeAgo(review.createdAt)}</span>
-            </div>
+            <span className="text-xs text-[var(--text-muted)]">
+              {review.company?.industry || 'Kenya'} &middot; reviews
+            </span>
           </div>
         </div>
 
-        {/* Rating */}
-        <div className="flex items-center gap-1.5 mb-2">
+        {/* Stars */}
+        <div className="flex gap-0.5 mb-2.5">
           <StarRating value={review.rating} readonly size="sm" />
         </div>
 
         {/* Title */}
         {review.title && (
-          <h4 className="font-bold text-slate-900 mb-2">{review.title}</h4>
+          <div className="text-[15px] font-semibold text-[var(--text-primary)] mb-2">
+            {review.title}
+          </div>
         )}
 
-        {/* Content */}
-        <p className="text-sm text-slate-500 leading-relaxed mb-4 line-clamp-3">
+        {/* Body */}
+        <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed line-clamp-3">
           {review.content}
         </p>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-          {showCompany && review.company && (
-            <Link
-              href={`/companies/${review.company.slug}`}
-              className="text-xs text-slate-400 flex items-center gap-1 hover:text-brand-600 transition-colors"
-            >
-              <Building2 className="w-3 h-3" />
-              {review.company.name}
-            </Link>
-          )}
-          {!showCompany && <div />}
-
-          <button
-            className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-brand-600 transition-colors"
-            onClick={() => {
-              // Helpful functionality
-            }}
+        {/* Company tag */}
+        {showCompany && review.company && (
+          <Link
+            href={`/companies/${review.company.slug}`}
+            className="inline-flex items-center gap-1.5 mt-3.5 text-xs text-[var(--text-muted)] px-2.5 py-1.5 bg-[var(--gray-50)] rounded-[6px] hover:bg-[var(--teal-50)] transition-colors"
           >
-            <ThumbsUp className="w-3.5 h-3.5" />
-            Helpful
-          </button>
-        </div>
+            <Building2 className="w-3 h-3" />
+            {review.company.name} &middot; {timeAgo(review.createdAt)}
+          </Link>
+        )}
       </article>
     );
   }
 
   return (
-    <article className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-sm transition-shadow">
-      {/* Header: Reviewer Info */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <Avatar
-            src={review.reviewer?.avatar}
-            name={review.reviewer?.fullName}
-            size="sm"
-          />
-          <div>
-            <p className="text-sm font-medium text-gray-900">
-              {review.reviewer?.fullName || 'Anonymous'}
-            </p>
-            <p className="text-xs text-gray-400">{timeAgo(review.createdAt)}</p>
-          </div>
+    <article className="review-card">
+      <div className="flex items-center gap-3 mb-4">
+        <div
+          className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+          style={{ background: avatarColor.bg, color: avatarColor.color }}
+        >
+          {initials}
         </div>
-        {badgeInfo && review.status !== 'PUBLISHED' && (
-          <Badge variant={badgeInfo.variant}>{badgeInfo.label}</Badge>
-        )}
+        <div>
+          <div className="text-sm font-medium text-[var(--text-primary)]">{reviewerName}</div>
+          <div className="text-xs text-[var(--text-muted)]">{timeAgo(review.createdAt)}</div>
+        </div>
       </div>
-
-      {/* Rating + Title */}
-      <div className="mb-2">
+      <div className="flex gap-0.5 mb-2.5">
         <StarRating value={review.rating} readonly size="sm" />
-        {review.title && (
-          <h4 className="text-base font-semibold text-gray-900 mt-2">
-            {review.title}
-          </h4>
-        )}
       </div>
-
-      {/* Content */}
-      <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">
-        {review.content}
-      </p>
-
-      {/* Company Info (optional) */}
+      {review.title && (
+        <div className="text-base font-semibold text-[var(--text-primary)] mb-2">{review.title}</div>
+      )}
+      <p className="text-sm text-[var(--text-secondary)] leading-relaxed line-clamp-3">{review.content}</p>
       {showCompany && review.company && (
         <Link
           href={`/companies/${review.company.slug}`}
-          className="inline-flex items-center gap-1.5 mt-3 text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
+          className="inline-flex items-center gap-1.5 mt-3 text-xs text-[var(--text-muted)] px-2.5 py-1.5 bg-[var(--gray-50)] rounded-[6px] hover:bg-[var(--teal-50)] transition-colors"
         >
-          {review.company.logo && (
-            <img
-              src={review.company.logo}
-              alt=""
-              className="w-4 h-4 rounded object-cover"
-            />
-          )}
-          {review.company.name}
-          {review.company.industry && (
-            <span className="text-gray-400 font-normal">
-              &middot; {review.company.industry}
-            </span>
-          )}
+          {review.company.name} &middot; {timeAgo(review.createdAt)}
         </Link>
       )}
-
-      {/* Footer */}
-      <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-        <Link
-          href={`/reviews/${review.id}`}
-          className="text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
-        >
-          Read more
-        </Link>
-
-        <div className="flex items-center gap-4">
-          {(review._count?.replies ?? (review.replies?.length ?? 0)) > 0 && (
-            <span className="flex items-center gap-1 text-xs text-gray-400">
-              <Building2 className="h-3.5 w-3.5" />
-              {review._count?.replies ?? review.replies?.length}
-            </span>
-          )}
-
-          {onFlag && review.status === 'PUBLISHED' && (
-            <button
-              onClick={() => onFlag(review.id)}
-              className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 transition-colors"
-              aria-label="Flag this review"
-            >
-              Report
-            </button>
-          )}
-        </div>
+      <div className="flex items-center justify-between mt-4 pt-3 border-t border-[var(--border)]">
+        <Link href={`/reviews/${review.id}`} className="text-sm text-accent hover:underline font-medium">Read more</Link>
+        {onFlag && review.status === 'PUBLISHED' && (
+          <button
+            onClick={() => onFlag(review.id)}
+            className="text-xs text-[var(--text-muted)] hover:text-[var(--coral-400)] transition-colors"
+          >
+            Report
+          </button>
+        )}
       </div>
     </article>
   );
