@@ -117,12 +117,11 @@ export default function HomePage() {
       {/* ============================================= */}
       {/* HERO                                          */}
       {/* ============================================= */}
-      <section className="hero-bg min-h-[92vh] grid items-center relative overflow-hidden px-4 sm:px-8 py-20 lg:py-[100px]">
+      <section className="hero-bg min-h-[80vh] flex items-center relative overflow-hidden px-4 sm:px-8 py-20 lg:py-24">
         <div className="hero-dots" />
         <div className="hero-glow" />
 
-        <div className="max-w-[1160px] mx-auto relative z-[2] grid lg:grid-cols-2 gap-10 lg:gap-20 items-center">
-          {/* Left: Hero Content */}
+        <div className="max-w-[700px] mx-auto relative z-[2] text-center">
           <div className="hero-stagger">
             {/* Tag */}
             <div className="inline-flex items-center gap-2 bg-white/12 border border-white/20 px-3.5 py-1.5 rounded-full text-xs font-medium text-white/90 tracking-wide uppercase mb-6">
@@ -131,102 +130,57 @@ export default function HomePage() {
             </div>
 
             {/* Heading */}
-            <h1 className="font-head text-[clamp(40px,5vw,62px)] font-extrabold text-white leading-[1.08] tracking-[-2px] mb-5">
+            <h1 className="font-head text-[clamp(36px,6vw,56px)] font-extrabold text-white leading-[1.1] tracking-[-2px] mb-5">
               Find businesses you can <em className="not-italic text-[#9FE1CB]">actually</em> trust
             </h1>
 
             {/* Sub */}
-            <p className="text-lg font-light text-white/78 leading-relaxed mb-9 max-w-[440px]">
+            <p className="text-lg font-light text-white/78 leading-relaxed mb-8 max-w-[520px] mx-auto">
               Real reviews from real Kenyans. Search companies, share experiences, and help your community make smarter decisions.
             </p>
-
-            {/* Actions */}
-            <div className="flex gap-3 flex-wrap mb-12">
-              <Link
-                href="/companies"
-                className="btn btn-white btn-lg"
-              >
-                <Search className="w-5 h-5" /> Search companies
-              </Link>
-              <Link
-                href="/reviews/write"
-                className="btn btn-outline-white btn-lg"
-              >
-                Write a review
-              </Link>
-            </div>
-
-            {/* Stats */}
-            <div className="flex gap-8">
-              <div>
-                <div className="font-head text-[28px] font-extrabold text-white">
-                  {formatStat(stats?.companies)}+
-                </div>
-                <div className="text-[13px] text-white/60">Companies listed</div>
-              </div>
-              <div>
-                <div className="font-head text-[28px] font-extrabold text-white">
-                  {formatStat(stats?.reviews)}+
-                </div>
-                <div className="text-[13px] text-white/60">Verified reviews</div>
-              </div>
-              <div>
-                <div className="font-head text-[28px] font-extrabold text-white">
-                  {stats?.avgRating ? stats.avgRating.toFixed(1) : '4.5'}
-                </div>
-                <div className="text-[13px] text-white/60 flex items-center gap-1">
-                  <Star className="w-3 h-3 text-amber-400 fill-amber-400" /> Avg rating
-                </div>
-              </div>
-            </div>
           </div>
 
-          {/* Right: Search Card */}
-          <div className="search-card">
-            <h3 className="font-head text-xl font-bold text-[var(--text-primary)] mb-1.5">Find a company</h3>
-            <p className="text-[13px] text-[var(--text-muted)] mb-5">Search by name, domain, or phone number</p>
+          {/* Search Bar (centered) */}
+          <div className="search-card hero-search-card mb-8">
+            <SearchBar
+              placeholder="e.g. Safaricom, Jumia, KCB Bank..."
+              variant="hero"
+            />
+          </div>
 
-            <div className="mb-3">
-              <SearchBar
-                placeholder="e.g. Safaricom, Jumia, KCB Bank..."
-                variant="hero"
-              />
+          {/* Quick Actions */}
+          <div className="flex items-center justify-center gap-3 flex-wrap mb-10">
+            <Link href="/reviews/write" className="btn btn-white">
+              Write a review
+            </Link>
+            <Link href="/companies" className="btn btn-outline-white">
+              <Search className="w-4 h-4" /> Browse all
+            </Link>
+          </div>
+
+          {/* Stats */}
+          <div className="flex items-center justify-center gap-10">
+            <div>
+              <div className="font-head text-[26px] font-extrabold text-white">
+                {formatStat(stats?.companies)}+
+              </div>
+              <div className="text-[12px] text-white/55">Companies</div>
             </div>
-
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              <Link href="/reviews/write" className="search-action-btn">
-                <span className="text-[22px] mb-0.5">✍️</span>
-                <span className="text-[13px] font-medium text-[var(--text-primary)]">Write a review</span>
-                <span className="text-[11px] text-[var(--text-muted)]">Rate a company</span>
-              </Link>
-              <Link href="/claim" className="search-action-btn">
-                <span className="text-[22px] mb-0.5">🏢</span>
-                <span className="text-[13px] font-medium text-[var(--text-primary)]">Claim your business</span>
-                <span className="text-[11px] text-[var(--text-muted)]">Take ownership</span>
-              </Link>
+            <div className="w-px h-8 bg-white/15" />
+            <div>
+              <div className="font-head text-[26px] font-extrabold text-white">
+                {formatStat(stats?.reviews)}+
+              </div>
+              <div className="text-[12px] text-white/55">Reviews</div>
             </div>
-
-            <div className="flex items-center gap-2.5 my-4 text-[var(--text-muted)] text-xs before:content-[''] after:content-[''] before:flex-1 before:h-px before:bg-[var(--border)] after:flex-1 after:h-px after:bg-[var(--border)]">
-              recently reviewed
-            </div>
-
-            <div className="flex flex-col gap-2">
-              {companies.slice(0, 3).map((c) => (
-                <Link
-                  key={c.id}
-                  href={`/companies/${c.slug}`}
-                  className="flex items-center gap-2.5 p-2.5 border border-[var(--border)] rounded-[var(--radius-sm)] hover:border-[var(--border-md)] hover:bg-[var(--gray-50)] transition-all bg-white"
-                >
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[13px] font-bold shrink-0 bg-[var(--teal-50)] text-[var(--teal-600)]">
-                    {c.name.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-medium text-[var(--text-primary)] truncate">{c.name}</div>
-                    <div className="text-[11px] text-[var(--text-muted)]">{c.industry || 'General'}</div>
-                  </div>
-                  <div className="text-xs text-[#EF9F27] shrink-0">★ {c.averageRating.toFixed(1)}</div>
-                </Link>
-              ))}
+            <div className="w-px h-8 bg-white/15" />
+            <div>
+              <div className="font-head text-[26px] font-extrabold text-white">
+                {stats?.avgRating ? stats.avgRating.toFixed(1) : '4.5'}
+              </div>
+              <div className="text-[12px] text-white/55 flex items-center gap-1">
+                <Star className="w-3 h-3 text-amber-400 fill-amber-400" /> Avg rating
+              </div>
             </div>
           </div>
         </div>

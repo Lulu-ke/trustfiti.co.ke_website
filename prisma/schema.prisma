@@ -106,6 +106,8 @@ model User {
   phoneNumber     String            @unique
   fullName        String?
   email           String?           @unique
+  password        String?
+  googleId        String?           @unique
   avatar          String?
   role            UserRole          @default(REVIEWER)
   isVerified      Boolean           @default(false)

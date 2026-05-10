@@ -19,21 +19,17 @@ export default function PhoneInput({
   placeholder = '712 345 678',
 }: PhoneInputProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let input = e.target.value.replace(/[^\d\s]/g, '');
-    const digits = input.replace(/\s/g, '');
-    if (digits.length > 9) {
-      input = digits.substring(0, 9).replace(/(\d{3})(\d{3})(\d{0,3})/, '$1 $2 $3').trim();
-    } else {
-      input = input.replace(/(\d{3})(\d{0,3})/, '$1 $2').trim();
-    }
-    onChange(input);
-  };
+    const raw = e.target.value.replace(/[^\d]/g, '');
+    if (raw.length > 9) return; // hard cap at 9 digits
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && value.endsWith(' ')) {
-      e.preventDefault();
-      onChange(value.trimEnd());
-    }
+    // Format: XXX XXX XXX
+    const parts = [
+      raw.substring(0, 3),
+      raw.substring(3, 6),
+      raw.substring(6, 9),
+    ].filter(Boolean);
+
+    onChange(parts.join(' '));
   };
 
   return (
@@ -59,13 +55,13 @@ export default function PhoneInput({
         </span>
         <input
           type="tel"
+          inputMode="numeric"
           value={value}
           onChange={handleChange}
-          onKeyDown={handleKeyDown}
           disabled={disabled}
           placeholder={placeholder}
           className="flex-1 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 bg-white focus:outline-none"
-          maxLength={12}
+          maxLength={11}
         />
       </div>
       {error && <p className="mt-1.5 text-sm text-red-600">{error}</p>}

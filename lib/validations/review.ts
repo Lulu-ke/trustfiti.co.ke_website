@@ -36,6 +36,22 @@ export const getReviewsSchema = z.object({
   sortBy: z.enum(["newest", "highest", "lowest"]).default("newest"),
 });
 
+export const createCompanySchema = z.object({
+  name: z.string().min(2, "Company name must be at least 2 characters"),
+  industry: z.string().max(100, "Industry must be under 100 characters").optional(),
+  website: z
+    .string()
+    .url("Must be a valid URL")
+    .max(255, "Website must be under 255 characters")
+    .optional()
+    .or(z.literal("")),
+  city: z.string().max(100, "City must be under 100 characters").optional(),
+  description: z
+    .string()
+    .max(500, "Description must be under 500 characters")
+    .optional(),
+});
+
 export const getCompaniesSchema = z.object({
   q: z.string().optional(),
   search: z.string().optional(),

@@ -10,7 +10,9 @@ import {
   ArrowRight,
   Tag,
   Star,
+  Plus,
 } from 'lucide-react';
+import AddCompanyModal from '@/components/companies/AddCompanyModal';
 
 interface SearchCompany {
   id: string;
@@ -37,6 +39,7 @@ interface SearchBarProps {
   className?: string;
   variant?: 'header' | 'hero' | 'minimal';
   onNavigate?: () => void;
+  onCompanyAdded?: (company: { id: string; name: string; slug: string }) => void;
 }
 
 export default function SearchBar({
@@ -44,6 +47,7 @@ export default function SearchBar({
   className,
   variant = 'header',
   onNavigate,
+  onCompanyAdded,
 }: SearchBarProps) {
   const router = useRouter();
   const [query, setQuery] = useState('');
@@ -53,6 +57,7 @@ export default function SearchBar({
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isFocused, setIsFocused] = useState(false);
+  const [showAddCompany, setShowAddCompany] = useState(false);
   const debouncedQuery = useDebounce(query, 300);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -293,6 +298,13 @@ export default function SearchBar({
               >
                 Search anyway
               </button>
+              <button
+                onClick={() => setShowAddCompany(true)}
+                className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-[var(--radius-md)] bg-[var(--teal-50)] text-[var(--accent)] hover:bg-[var(--teal-100)] transition-colors"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add this company
+              </button>
             </div>
           ) : (
             <>
@@ -447,6 +459,18 @@ export default function SearchBar({
           )}
         </div>
       )}
+
+      {/* Add Company Modal */}
+      <AddCompanyModal
+        isOpen={showAddCompany}
+        onClose={() => setShowAddCompany(false)}
+        prefilledName={query}
+        onCompanyAdded={(company) => {
+          setShowAddCompany(false);
+          setIsOpen(false);
+          onCompanyAdded?.(company);
+        }}
+      />
     </div>
   );
 }

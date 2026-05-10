@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { useDebounce } from '@/hooks/useDebounce';
-import { Search, X, Building2, Loader2 } from 'lucide-react';
+import { Search, X, Building2, Loader2, Plus } from 'lucide-react';
 import type { Company } from '@/types';
+import AddCompanyModal from '@/components/companies/AddCompanyModal';
 
 interface CompanySearchProps {
   onSelect: (company: Company) => void;
@@ -20,6 +21,7 @@ export default function CompanySearch({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [showAddCompany, setShowAddCompany] = useState(false);
   const debouncedQuery = useDebounce(query, 300);
   const containerRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -179,9 +181,48 @@ export default function CompanySearch({
 
       {isOpen && !isLoading && query.trim() && results.length === 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 p-4 z-50 animate-slide-down">
-          <p className="text-sm text-gray-500 text-center">No companies found</p>
+          <p className="text-sm text-gray-500 text-center mb-3">No companies found</p>
+          <button
+            onClick={() => setShowAddCompany(true)}
+            className="mx-auto flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Can&apos;t find the company? Add it
+          </button>
         </div>
       )}
+
+      {/* Add Company Modal */}
+      <AddCompanyModal
+        isOpen={showAddCompany}
+        onClose={() => setShowAddCompany(false)}
+        prefilledName={query}
+        onCompanyAdded={(company) => {
+          setShowAddCompany(false);
+          setIsOpen(false);
+          // Auto-select the newly added company
+          const newCompany: Company = {
+            id: company.id,
+            name: company.name,
+            slug: company.slug,
+            description: null,
+            logo: null,
+            coverImage: null,
+            website: null,
+            industry: company.industry,
+            address: null,
+            city: null,
+            country: 'Kenya',
+            averageRating: 0,
+            totalReviews: 0,
+            isVerified: false,
+            isActive: true,
+            isFeatured: false,
+            createdAt: new Date().toISOString(),
+          };
+          onSelect(newCompany);
+        }}
+      />
     </div>
   );
 }
