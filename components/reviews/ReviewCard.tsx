@@ -4,19 +4,21 @@ import { timeAgo } from '@/lib/utils';
 import StarRating from '@/components/reviews/StarRating';
 import Avatar from '@/components/ui/Avatar';
 import Badge from '@/components/ui/Badge';
-import { MessageSquare, Flag } from 'lucide-react';
+import { Building2, ThumbsUp, BadgeCheck } from 'lucide-react';
 import type { Review } from '@/types';
 
 interface ReviewCardProps {
   review: Review;
   onFlag?: (reviewId: string) => void;
   showCompany?: boolean;
+  homepage?: boolean;
 }
 
 export default function ReviewCard({
   review,
   onFlag,
   showCompany = false,
+  homepage = false,
 }: ReviewCardProps) {
   const statusBadge: Record<string, { variant: 'success' | 'warning' | 'danger' | 'neutral'; label: string }> = {
     PUBLISHED: { variant: 'success', label: 'Published' },
@@ -28,6 +30,71 @@ export default function ReviewCard({
   const badgeInfo = review.isFeatured
     ? { variant: 'info' as const, label: 'Featured' }
     : statusBadge[review.status];
+
+  if (homepage) {
+    return (
+      <article className="bg-white rounded-2xl border border-slate-100 p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white font-semibold text-sm">
+              {review.reviewer?.fullName?.charAt(0) || 'A'}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-slate-900">
+                  {review.reviewer?.fullName || 'Anonymous'}
+                </span>
+                {review.isVerified && (
+                  <BadgeCheck className="w-3.5 h-3.5 text-brand-500" />
+                )}
+              </div>
+              <span className="text-xs text-slate-400">{timeAgo(review.createdAt)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Rating */}
+        <div className="flex items-center gap-1.5 mb-2">
+          <StarRating value={review.rating} readonly size="sm" />
+        </div>
+
+        {/* Title */}
+        {review.title && (
+          <h4 className="font-bold text-slate-900 mb-2">{review.title}</h4>
+        )}
+
+        {/* Content */}
+        <p className="text-sm text-slate-500 leading-relaxed mb-4 line-clamp-3">
+          {review.content}
+        </p>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+          {showCompany && review.company && (
+            <Link
+              href={`/companies/${review.company.slug}`}
+              className="text-xs text-slate-400 flex items-center gap-1 hover:text-brand-600 transition-colors"
+            >
+              <Building2 className="w-3 h-3" />
+              {review.company.name}
+            </Link>
+          )}
+          {!showCompany && <div />}
+
+          <button
+            className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-brand-600 transition-colors"
+            onClick={() => {
+              // Helpful functionality
+            }}
+          >
+            <ThumbsUp className="w-3.5 h-3.5" />
+            Helpful
+          </button>
+        </div>
+      </article>
+    );
+  }
 
   return (
     <article className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-sm transition-shadow">
@@ -82,7 +149,7 @@ export default function ReviewCard({
           {review.company.name}
           {review.company.industry && (
             <span className="text-gray-400 font-normal">
-              · {review.company.industry}
+              &middot; {review.company.industry}
             </span>
           )}
         </Link>
@@ -98,22 +165,19 @@ export default function ReviewCard({
         </Link>
 
         <div className="flex items-center gap-4">
-          {/* Reply count */}
           {(review._count?.replies ?? (review.replies?.length ?? 0)) > 0 && (
             <span className="flex items-center gap-1 text-xs text-gray-400">
-              <MessageSquare className="h-3.5 w-3.5" />
+              <Building2 className="h-3.5 w-3.5" />
               {review._count?.replies ?? review.replies?.length}
             </span>
           )}
 
-          {/* Flag button */}
           {onFlag && review.status === 'PUBLISHED' && (
             <button
               onClick={() => onFlag(review.id)}
               className="flex items-center gap-1 text-xs text-gray-400 hover:text-red-500 transition-colors"
               aria-label="Flag this review"
             >
-              <Flag className="h-3.5 w-3.5" />
               Report
             </button>
           )}

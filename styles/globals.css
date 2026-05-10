@@ -21,9 +21,13 @@ html {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: #059669;
+  color: white;
 }
 
 /* Custom scrollbar */
@@ -46,7 +50,6 @@ body {
   background: #64748b;
 }
 
-/* Firefox scrollbar */
 * {
   scrollbar-width: thin;
   scrollbar-color: #94a3b8 #f1f5f9;
@@ -59,7 +62,10 @@ body {
   border-radius: 4px;
 }
 
-/* Animations */
+/* ============================================= */
+/* ANIMATIONS                                      */
+/* ============================================= */
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -85,12 +91,13 @@ body {
   to { transform: rotate(360deg); }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.2s ease-out;
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-.animate-slide-up {
-  animation: slideUp 0.3s ease-out;
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
 }
 
 .animate-slide-down {
@@ -102,14 +109,185 @@ body {
 }
 
 /* Skeleton loading */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
 .skeleton {
   background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 4px;
+}
+
+/* ============================================= */
+/* GLASS & GRADIENT EFFECTS                       */
+/* ============================================= */
+
+.glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.glass-light {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gradient-mesh {
+  background: linear-gradient(135deg, #022c22 0%, #064e3b 25%, #065f46 50%, #047857 75%, #022c22 100%);
+  background-size: 400% 400%;
+  animation: gradient-shift 12s ease infinite;
+}
+
+.shimmer-text {
+  background: linear-gradient(90deg, #10b981 0%, #34d399 25%, #FBBF24 50%, #34d399 75%, #10b981 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 4s linear infinite;
+}
+
+/* ============================================= */
+/* BUTTON STYLES                                  */
+/* ============================================= */
+
+.btn-primary {
+  background: linear-gradient(135deg, #059669, #047857);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #10b981, #059669);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.btn-primary:hover::before {
+  opacity: 1;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px -5px rgba(5, 150, 105, 0.4);
+}
+
+.btn-primary > * {
+  position: relative;
+  z-index: 1;
+}
+
+.btn-secondary {
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(5, 150, 105, 0.08);
+  color: #059669;
+  transform: translateY(-1px);
+}
+
+/* ============================================= */
+/* SEARCH EFFECTS                                 */
+/* ============================================= */
+
+.search-glow:focus-within {
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2), 0 20px 60px -12px rgba(5, 150, 105, 0.3);
+}
+
+/* ============================================= */
+/* CARD EFFECTS                                   */
+/* ============================================= */
+
+.company-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.company-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 25px 50px -12px rgba(5, 150, 105, 0.15);
+}
+
+.category-pill {
+  transition: all 0.25s ease;
+}
+
+.category-pill:hover {
+  transform: translateY(-2px);
+  background: #059669;
+  color: white;
+  border-color: #059669;
+}
+
+/* ============================================= */
+/* NAVIGATION SCROLL STATE                        */
+/* ============================================= */
+
+.nav-scrolled {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* ============================================= */
+/* SCROLL REVEAL                                  */
+/* ============================================= */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================= */
+/* RATING BAR ANIMATION                           */
+/* ============================================= */
+
+.rating-bar {
+  transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.trust-score-bar {
+  transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================= */
+/* MOBILE MENU                                    */
+/* ============================================= */
+
+.mobile-menu {
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-menu.open {
+  transform: translateX(0);
+}
+
+/* ============================================= */
+/* SEARCH DROPDOWN                                */
+/* ============================================= */
+
+.search-dropdown {
+  display: none;
+}
+
+.search-dropdown.active {
+  display: block;
+  animation: slideUp 0.25s ease-out;
 }

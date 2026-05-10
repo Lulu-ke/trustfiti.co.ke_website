@@ -14,6 +14,7 @@ export interface Review {
   content: string;
   isFeatured: boolean;
   isPublished: boolean;
+  isVerified?: boolean;
   status: "PUBLISHED" | "HIDDEN" | "FLAGGED" | "REMOVED";
   createdAt: string;
   updatedAt: string;
@@ -23,6 +24,7 @@ export interface Review {
     id: string;
     fullName: string | null;
     avatar: string | null;
+    isVerified?: boolean;
   };
   company?: {
     id: string;
@@ -68,6 +70,7 @@ export interface Company {
   isVerified: boolean;
   isActive: boolean;
   isFeatured: boolean;
+  isClaimed?: boolean;
   createdAt: string;
 }
 

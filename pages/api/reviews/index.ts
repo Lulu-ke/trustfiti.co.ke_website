@@ -64,6 +64,7 @@ async function getReviews(req: NextApiRequest, res: NextApiResponse) {
               id: true,
               fullName: true,
               avatar: true,
+              isVerified: true,
             },
           },
           company: {
