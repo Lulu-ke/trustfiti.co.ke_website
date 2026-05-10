@@ -1,0 +1,372 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  REVIEWER
+  COMPANY_OWNER
+  ADMIN
+}
+
+enum ReviewStatus {
+  PUBLISHED
+  HIDDEN
+  FLAGGED
+  REMOVED
+}
+
+enum FlagReason {
+  SPAM
+  INAPPROPRIATE
+  FAKE
+  OFF_TOPIC
+  OTHER
+}
+
+enum FlagStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+  ACTIONED
+}
+
+enum OtpPurpose {
+  LOGIN
+  REGISTRATION
+  PHONE_CHANGE
+}
+
+enum NotificationType {
+  REVIEW_PUBLISHED
+  REVIEW_REPLY
+  INVITATION_RECEIVED
+  REVIEW_FLAGGED
+  COMPANY_VERIFIED
+  COMPANY_SUSPENDED
+  REVIEW_REMOVED
+  USER_DEACTIVATED
+  GENERAL
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum VerificationStatus {
+  NOT_SUBMITTED
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum AnnouncementType {
+  INFO
+  WARNING
+  MAINTENANCE
+  UPDATE
+}
+
+// ============================================
+// SHARED TABLES
+// ============================================
+
+model User {
+  id              String            @id @default(cuid())
+  phoneNumber     String            @unique
+  fullName        String?
+  email           String?           @unique
+  avatar          String?
+  role            UserRole          @default(REVIEWER)
+  isVerified      Boolean           @default(false)
+  isActive        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  reviews         Review[]
+  flags           ReviewFlag[]
+  notifications   Notification[]
+  invitations     Invitation[]
+  otpVerifications OtpVerification[]
+  reviewReplies   ReviewReply[]
+  auditLogs       AuditLog[]        @relation("AdminAuditLogs")
+  ownedCompany    Company?
+
+  @@index([phoneNumber])
+  @@index([role])
+}
+
+model Company {
+  id                  String              @id @default(cuid())
+  name                String
+  slug                String              @unique
+  description         String?             @db.Text
+  logo                String?
+  coverImage          String?
+  website             String?
+  industry            String?
+  address             String?
+  city                String?
+  country             String              @default("Kenya")
+  averageRating       Float               @default(0)
+  totalReviews        Int                 @default(0)
+  isVerified          Boolean             @default(false)
+  isActive            Boolean             @default(true)
+  isFeatured          Boolean             @default(false)
+  verificationStatus  VerificationStatus  @default(NOT_SUBMITTED)
+  verificationDocuments Json?
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  reviews             Review[]
+  invitations         Invitation[]
+  ownerId             String?             @unique
+  owner               User?               @relation(fields: [ownerId], references: [id])
+  categories          CompanyCategory[]
+
+  @@unique([slug])
+  @@index([industry])
+  @@index([city])
+  @@index([verificationStatus])
+  @@index([isActive])
+}
+
+model Review {
+  id            String        @id @default(cuid())
+  rating        Int
+  title         String?       @db.VarChar(200)
+  content       String        @db.Text
+  isFeatured    Boolean       @default(false)
+  isPublished   Boolean       @default(true)
+  status        ReviewStatus  @default(PUBLISHED)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  reviewerId    String
+  reviewer      User          @relation(fields: [reviewerId], references: [id])
+  companyId     String
+  company       Company       @relation(fields: [companyId], references: [id])
+
+  replies       ReviewReply[]
+  flags         ReviewFlag[]
+
+  @@index([companyId, status])
+  @@index([reviewerId])
+  @@index([rating])
+  @@index([createdAt])
+}
+
+model ReviewReply {
+  id          String   @id @default(cuid())
+  content     String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  reviewId    String
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+
+  @@index([reviewId])
+}
+
+model ReviewFlag {
+  id          String     @id @default(cuid())
+  reason      FlagReason
+  description String?    @db.Text
+  status      FlagStatus @default(PENDING)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  reviewId    String
+  review      Review     @relation(fields: [reviewId], references: [id])
+  reporterId  String
+  reporter    User       @relation(fields: [reporterId], references: [id])
+
+  @@index([reviewId, status])
+}
+
+model Invitation {
+  id          String    @id @default(cuid())
+  token       String    @unique
+  email       String?
+  phone       String?
+  message     String?   @db.Text
+  isUsed      Boolean   @default(false)
+  usedById    String?
+  usedBy      User?     @relation(fields: [usedById], references: [id])
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+
+  companyId   String
+  company     Company   @relation(fields: [companyId], references: [id])
+  totalSent   Int       @default(0)
+  totalUsed   Int       @default(0)
+
+  @@index([token])
+  @@index([companyId])
+  @@index([email])
+  @@index([phone])
+}
+
+model Notification {
+  id          String            @id @default(cuid())
+  type        NotificationType
+  title       String
+  message     String            @db.Text
+  isRead      Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  metadata    Json?
+
+  @@index([userId, isRead, createdAt])
+}
+
+model OtpVerification {
+  id          String     @id @default(cuid())
+  phoneNumber String
+  code        String     @length(6)
+  purpose     OtpPurpose @default(LOGIN)
+  attempts    Int        @default(0)
+  maxAttempts Int        @default(5)
+  expiresAt   DateTime
+  verifiedAt  DateTime?
+  createdAt   DateTime   @default(now())
+
+  userId      String?
+  user        User?      @relation(fields: [userId], references: [id])
+
+  @@index([phoneNumber, purpose])
+  @@index([expiresAt])
+}
+
+// ============================================
+// INFRASTRUCTURE TABLES
+// ============================================
+
+model JobQueue {
+  id          String    @id @default(cuid())
+  type        String
+  payload     Json
+  status      JobStatus @default(PENDING)
+  priority    Int       @default(0)
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(3)
+  runAfter    DateTime?
+  lastError   String?   @db.Text
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([status, priority, runAfter, createdAt])
+}
+
+model FileUpload {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  path         String
+  url          String
+  category     String
+  uploadedById String?
+  uploadedBy   User?    @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@index([category])
+  @@index([uploadedById])
+}
+
+// ============================================
+// ADMIN MODULE TABLES
+// ============================================
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  entityType  String
+  entityId    String
+  details     Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  adminId     String
+  admin       User     @relation("AdminAuditLogs", fields: [adminId], references: [id])
+
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([adminId])
+  @@index([createdAt])
+}
+
+model PlatformSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String   @db.Text
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  @@index([key])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?  @db.Text
+  icon        String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  companies   CompanyCategory[]
+
+  @@index([slug])
+  @@index([sortOrder])
+}
+
+model CompanyCategory {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, categoryId])
+  @@index([categoryId])
+}
+
+model Announcement {
+  id             String            @id @default(cuid())
+  title          String
+  content        String            @db.Text
+  type           AnnouncementType  @default(INFO)
+  targetAudience String            @default("ALL")
+  isPublished    Boolean           @default(false)
+  publishedAt    DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([isPublished, publishedAt])
+  @@index([targetAudience])
+  @@index([expiresAt])
+}
