@@ -260,7 +260,7 @@ model Notification {
 model OtpVerification {
   id          String     @id @default(cuid())
   phoneNumber String
-  code        String     @length(6)
+  code        String     @db.VarChar(6)
   purpose     OtpPurpose @default(LOGIN)
   attempts    Int        @default(0)
   maxAttempts Int        @default(5)
