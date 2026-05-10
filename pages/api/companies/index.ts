@@ -65,6 +65,7 @@ async function getCompanies(req: NextApiRequest, res: NextApiResponse) {
           totalReviews: true,
           isVerified: true,
           isFeatured: true,
+          isClaimed: true,
           createdAt: true,
         },
       }),

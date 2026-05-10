@@ -11,7 +11,7 @@ import Link from 'next/link';
 export default function WriteReviewPage() {
   const { status } = useSession();
   const router = useRouter();
-  const { companyId, companyName, invitationToken } = router.query;
+  const { companyId } = router.query;
 
   if (status === 'loading') {
     return (
@@ -34,7 +34,7 @@ export default function WriteReviewPage() {
           <p className="text-gray-500 text-sm mb-6">
             You need to be signed in to write a review.
           </p>
-          <Link href="/login">
+          <Link href={`/login?callbackUrl=${encodeURIComponent(router.asPath)}`}>
             <Button size="lg" className="w-full">
               Sign In to Continue
             </Button>
@@ -46,12 +46,7 @@ export default function WriteReviewPage() {
 
   const handleSuccess = () => {
     toast.success('Your review has been published!');
-    const cid = companyId as string;
-    if (cid) {
-      router.push(`/companies/${encodeURIComponent(companyName as string)}`);
-    } else {
-      router.push('/profile');
-    }
+    router.push('/profile');
   };
 
   return (
@@ -83,8 +78,8 @@ export default function WriteReviewPage() {
           <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 sm:p-8">
             <ReviewForm
               companyId={companyId as string | undefined}
-              companyName={companyName as string | undefined}
-              invitationToken={invitationToken as string | undefined}
+              companyName={undefined}
+              invitationToken={undefined}
               onSuccess={handleSuccess}
             />
           </div>

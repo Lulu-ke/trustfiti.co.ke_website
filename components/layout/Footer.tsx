@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 const footerSections = [
   {
@@ -7,8 +8,8 @@ const footerSections = [
     links: [
       { label: 'About Us', href: '/about' },
       { label: 'How It Works', href: '/how-it-works' },
-      { label: 'Careers', href: '/careers' },
-      { label: 'Blog', href: '/blog' },
+      { label: 'Careers', href: '#', comingSoon: true },
+      { label: 'Blog', href: '#', comingSoon: true },
       { label: 'Contact Us', href: '/contact' },
     ],
   },
@@ -16,18 +17,18 @@ const footerSections = [
     title: 'For Reviewers',
     links: [
       { label: 'Write a Review', href: '/reviews/write' },
-      { label: 'Guidelines', href: '/review-guidelines' },
-      { label: 'Community', href: '/community' },
-      { label: 'Help Center', href: '/help' },
+      { label: 'Guidelines', href: '#', comingSoon: true },
+      { label: 'Community', href: '#', comingSoon: true },
+      { label: 'Help Center', href: '#', comingSoon: true },
     ],
   },
   {
     title: 'For Companies',
     links: [
       { label: 'Claim Your Page', href: '/claim' },
-      { label: 'Business Plans', href: '/pricing' },
-      { label: 'Analytics', href: '/analytics' },
-      { label: 'API Access', href: '/api-docs' },
+      { label: 'Business Plans', href: '#', comingSoon: true },
+      { label: 'Analytics', href: '#', comingSoon: true },
+      { label: 'API Access', href: '#', comingSoon: true },
     ],
   },
   {
@@ -35,8 +36,8 @@ const footerSections = [
     links: [
       { label: 'Terms of Service', href: '/terms' },
       { label: 'Privacy Policy', href: '/privacy' },
-      { label: 'Cookie Policy', href: '/cookies' },
-      { label: 'Community Guidelines', href: '/community-guidelines' },
+      { label: 'Cookie Policy', href: '#', comingSoon: true },
+      { label: 'Community Guidelines', href: '#', comingSoon: true },
     ],
   },
 ];
@@ -93,12 +94,24 @@ export default function Footer() {
               <ul className="space-y-3">
                 {section.links.map((link) => (
                   <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-gray-400 hover:text-white transition-colors"
-                    >
-                      {link.label}
-                    </Link>
+                    {'comingSoon' in link && link.comingSoon ? (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          toast('Coming soon!', { icon: '🔜' });
+                        }}
+                        className="text-sm text-gray-400 hover:text-white transition-colors"
+                      >
+                        {link.label}
+                      </button>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        className="text-sm text-gray-400 hover:text-white transition-colors"
+                      >
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

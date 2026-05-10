@@ -7,7 +7,6 @@ import toast from 'react-hot-toast';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import Layout from '@/components/layout/Layout';
 import {
   Globe,
   Shield,
@@ -175,7 +174,7 @@ export default function ClaimBusinessPage() {
   const StatusIcon = statusIcon;
 
   return (
-    <Layout>
+    <>
       <Head>
         <title>Claim Your Business — TrustFiti</title>
         <meta name="description" content="Claim your business page on TrustFiti and manage your reviews, respond to customers, and build trust." />
@@ -506,6 +505,6 @@ export default function ClaimBusinessPage() {
           </div>
         )}
       </div>
-    </Layout>
+    </>
   );
 }

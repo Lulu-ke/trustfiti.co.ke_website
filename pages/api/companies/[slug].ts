@@ -29,6 +29,7 @@ async function getCompanyBySlug(req: NextApiRequest, res: NextApiResponse) {
         isVerified: true,
         isActive: true,
         isFeatured: true,
+        isClaimed: true,
         createdAt: true,
       },
     });

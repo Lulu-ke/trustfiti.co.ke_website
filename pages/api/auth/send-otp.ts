@@ -43,7 +43,7 @@ export default async function handler(
     const expiresAt = new Date(Date.now() + OTP_EXPIRY_SECONDS * 1000);
 
     // Create OTP record in database
-    await prisma.otpVerification.create({
+    const otpRecord = await prisma.otpVerification.create({
       data: {
         phoneNumber,
         code: otpCode,
@@ -69,7 +69,7 @@ export default async function handler(
 
     return success(
       res,
-      { message: "OTP sent", expiresIn: OTP_EXPIRY_SECONDS },
+      { message: "OTP sent", expiresIn: OTP_EXPIRY_SECONDS, token: otpRecord.id },
       "OTP sent successfully"
     );
   } catch (error) {

@@ -1,19 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bell, AlertCircle } from 'lucide-react';
-import { usePolling } from '@/hooks/usePolling';
+import useSWR from 'swr';
 import NotificationList from './NotificationList';
 import type { Notification } from '@/types';
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { data, error } = usePolling<{ notifications: Notification[]; unreadCount: number }>(
+  const { data, error, mutate } = useSWR<{ success: boolean; data: { notifications: Notification[]; unreadCount: number } }>(
     '/api/notifications',
-    { interval: 30000, enabled: true }
+    fetcher,
+    { refreshInterval: 30000, revalidateOnFocus: false, dedupingInterval: 5000 }
   );
 
-  const unreadCount = data?.unreadCount ?? 0;
-  const notifications = data?.notifications ?? [];
+  const unreadCount = data?.data?.unreadCount ?? 0;
+  const notifications = data?.data?.notifications ?? [];
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -24,6 +27,22 @@ export default function NotificationBell() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const handleMarkAllRead = async () => {
+    try {
+      // Get all unread notification IDs from current data
+      const unreadIds = notifications.filter(n => !n.isRead).map(n => n.id);
+      if (unreadIds.length === 0) return;
+      await fetch('/api/notifications', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: unreadIds }),
+      });
+      mutate();
+    } catch {
+      // Silently fail
+    }
+  };
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -46,7 +65,10 @@ export default function NotificationBell() {
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
             <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
             {unreadCount > 0 && (
-              <button className="text-xs text-emerald-600 hover:text-emerald-700 font-medium transition-colors">
+              <button
+                onClick={handleMarkAllRead}
+                className="text-xs text-emerald-600 hover:text-emerald-700 font-medium transition-colors"
+              >
                 Mark all as read
               </button>
             )}
@@ -70,6 +92,7 @@ export default function NotificationBell() {
           </div>
 
           {/* Footer */}
+          {/* TODO: dedicated notifications page */}
           {notifications.length > 0 && (
             <div className="border-t border-gray-100 px-4 py-2.5">
               <button

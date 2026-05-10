@@ -26,20 +26,18 @@ import type { Review } from '@/types';
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 interface ProfileData {
-  user: {
-    id: string;
-    fullName: string | null;
-    email: string | null;
-    phoneNumber: string;
-    avatar: string | null;
-    role: string;
-    createdAt: string;
-  };
+  id: string;
+  phoneNumber: string;
+  fullName: string | null;
+  email: string | null;
+  avatar: string | null;
+  role: string;
+  isVerified: boolean;
+  createdAt: string;
   stats: {
     totalReviews: number;
     averageRating: number;
   };
-  reviews: Review[];
 }
 
 export default function ProfilePage() {
@@ -50,8 +48,13 @@ export default function ProfilePage() {
   const [editEmail, setEditEmail] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  const { data, isLoading, mutate } = useSWR<ProfileData>(
-    isAuthenticated ? '/api/profile' : null,
+  const { data, isLoading, mutate } = useSWR<{ success: boolean; data: ProfileData }>(
+    isAuthenticated ? '/api/user/profile' : null,
+    fetcher
+  );
+
+  const { data: reviewsData } = useSWR<{ success: boolean; data: Review[]; pagination?: { total: number } }>(
+    isAuthenticated ? '/api/user/reviews' : null,
     fetcher
   );
 
@@ -63,9 +66,9 @@ export default function ProfilePage() {
   }, [isAuthenticated, authLoading, router]);
 
   const openEditModal = () => {
-    if (data) {
-      setEditName(data.user.fullName || '');
-      setEditEmail(data.user.email || '');
+    if (data?.data) {
+      setEditName(data.data.fullName || '');
+      setEditEmail(data.data.email || '');
     }
     setEditModalOpen(true);
   };
@@ -73,8 +76,8 @@ export default function ProfilePage() {
   const handleSaveProfile = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch('/api/profile', {
-        method: 'PATCH',
+      const res = await fetch('/api/user/profile', {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fullName: editName.trim() || null,
@@ -87,7 +90,7 @@ export default function ProfilePage() {
         mutate();
       } else {
         const d = await res.json().catch(() => ({}));
-        toast.error(d.error || 'Failed to update profile');
+        toast.error(d.message || d.error || 'Failed to update profile');
       }
     } catch {
       toast.error('Failed to update profile');
@@ -104,9 +107,11 @@ export default function ProfilePage() {
     );
   }
 
-  if (!isAuthenticated || !data) return null;
+  if (!isAuthenticated || !data?.data) return null;
 
-  const { user: profile, stats, reviews } = data;
+  const profile = data.data;
+  const stats = profile.stats;
+  const reviews = reviewsData?.data || [];
 
   return (
     <>
@@ -177,7 +182,11 @@ export default function ProfilePage() {
             </div>
             <div className="hidden sm:block bg-white border border-gray-200 rounded-xl p-5 text-center">
               <div className="text-2xl font-bold text-gray-900 mb-1">
-                {new Date().getMonth() - new Date(profile.createdAt).getMonth() + 1}
+                {(() => {
+                  const created = new Date(profile.createdAt);
+                  const now = new Date();
+                  return Math.max(1, (now.getFullYear() - created.getFullYear()) * 12 + (now.getMonth() - created.getMonth()) + 1);
+                })()}
               </div>
               <div className="text-sm text-gray-500">Months Active</div>
             </div>

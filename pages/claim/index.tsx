@@ -2,14 +2,15 @@ import React from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import Layout from '@/components/layout/Layout';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Button from '@/components/ui/Button';
+import ClaimBusinessPage from './[companyId]';
 import { Globe, Shield, Search } from 'lucide-react';
 
 export default function ClaimPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const startSearch = router.query.search === 'true';
 
   if (status === 'loading') return <LoadingSpinner />;
 
@@ -18,8 +19,13 @@ export default function ClaimPage() {
     return null;
   }
 
+  // If ?search=true, render the claim wizard directly
+  if (startSearch) {
+    return <ClaimBusinessPage />;
+  }
+
   return (
-    <Layout>
+    <>
       <Head>
         <title>Claim Your Business — TrustFiti</title>
         <meta name="description" content="Verify domain ownership to claim your business page on TrustFiti." />
@@ -53,11 +59,11 @@ export default function ClaimPage() {
           </div>
         </div>
 
-        <Button size="lg" onClick={() => router.push('/claim/start')}>
+        <Button size="lg" onClick={() => router.push('/claim?search=true')}>
           <Shield className="h-4 w-4" />
           Start Claiming
         </Button>
       </div>
-    </Layout>
+    </>
   );
 }

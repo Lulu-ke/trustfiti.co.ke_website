@@ -56,6 +56,19 @@ export default function HomePage() {
     reviews: Review[];
   }>(`/api/reviews?limit=3&sort=recent`, fetcher);
 
+  const { data: statsData } = useSWR<{
+    success: boolean;
+    data: { companies: number; reviews: number; avgRating: number };
+  }>('/api/stats', fetcher);
+
+  const formatNumber = (n: number): string => {
+    if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return n.toString();
+  };
+
+  const stats = statsData?.data;
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -257,7 +270,7 @@ export default function HomePage() {
           <div className="grid grid-cols-3 gap-6 sm:gap-8 max-w-2xl mx-auto text-center">
             <div>
               <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-1">
-                10K+
+                {stats ? formatNumber(stats.reviews) : '—'}
               </div>
               <div className="text-sm text-gray-500 flex items-center justify-center gap-1">
                 <TrendingUp className="h-4 w-4" />
@@ -266,7 +279,7 @@ export default function HomePage() {
             </div>
             <div>
               <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-1">
-                2K+
+                {stats ? formatNumber(stats.companies) : '—'}
               </div>
               <div className="text-sm text-gray-500 flex items-center justify-center gap-1">
                 <Building2 className="h-4 w-4" />
@@ -275,7 +288,7 @@ export default function HomePage() {
             </div>
             <div>
               <div className="text-3xl sm:text-4xl font-bold text-gray-900 mb-1">
-                4.3
+                {stats ? stats.avgRating.toFixed(1) : '—'}
               </div>
               <div className="text-sm text-gray-500 flex items-center justify-center gap-1">
                 <Star className="h-4 w-4" />
