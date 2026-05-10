@@ -10,7 +10,7 @@ async function getCompanyBySlug(req: NextApiRequest, res: NextApiResponse) {
     }
 
     // Find company by slug (isActive=true)
-    const company = await prisma.company.findUnique({
+    const company = await prisma.company.findFirst({
       where: { slug },
       select: {
         id: true,

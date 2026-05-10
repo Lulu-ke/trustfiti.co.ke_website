@@ -68,7 +68,7 @@ const handlers: Record<string, (payload: any) => Promise<void>> = {
         where: { id: companyId },
         data: {
           averageRating: Math.round((result._avg.rating || 0) * 10) / 10,
-          totalReviews: result._count,
+          totalReviews: result._count.id,
         },
       });
     } finally {

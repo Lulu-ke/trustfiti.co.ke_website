@@ -20,7 +20,6 @@ async function main() {
       role: "ADMIN",
       isVerified: true,
       isActive: true,
-      password: hashedPassword,
     },
   });
 

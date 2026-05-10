@@ -23,6 +23,7 @@ import type { Company } from '@/types';
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 interface CompanyWithStats extends Company {
+  isClaimed?: boolean;
   ratingDistribution?: { rating: number; count: number }[];
 }
 
