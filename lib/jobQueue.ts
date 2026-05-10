@@ -36,7 +36,7 @@ export async function enqueue(
   return job.id;
 }
 
-export async function dequeue(limit: number = 5): Promise<{ id: string; type: string; payload: Record<string, string> }[]> {
+export async function dequeue(limit: number = 5): Promise<{ id: string; type: string; payload: any }[]> {
   const now = new Date();
   const jobs = await prisma.jobQueue.findMany({
     where: {
