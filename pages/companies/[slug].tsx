@@ -16,6 +16,7 @@ import {
   PenSquare,
   Building2,
   ExternalLink,
+  Shield,
 } from 'lucide-react';
 import type { Company } from '@/types';
 
@@ -199,13 +200,27 @@ export default function CompanyProfilePage() {
               </div>
 
               {/* CTA */}
-              <div className="sm:pt-10 self-start">
+              <div className="sm:pt-10 self-start flex flex-col gap-2">
                 <Link href={`/reviews/write?companyId=${company.id}&companyName=${encodeURIComponent(company.name)}`}>
                   <Button size="lg">
                     <PenSquare className="h-4 w-4" />
                     Write a Review
                   </Button>
                 </Link>
+                {!company.isClaimed && (
+                  <Link href={`/claim/${company.id}`}>
+                    <Button size="lg" variant="secondary" className="gap-1">
+                      <Shield className="h-4 w-4" />
+                      Claim This Business
+                    </Button>
+                  </Link>
+                )}
+                {company.isClaimed && (
+                  <Badge variant="success" className="self-start">
+                    <CheckCircle className="h-3.5 w-3.5" />
+                    Claimed
+                  </Badge>
+                )}
               </div>
             </div>
 

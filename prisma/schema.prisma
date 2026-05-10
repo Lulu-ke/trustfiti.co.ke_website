@@ -54,6 +54,9 @@ enum NotificationType {
   COMPANY_SUSPENDED
   REVIEW_REMOVED
   USER_DEACTIVATED
+  CLAIM_SUBMITTED
+  CLAIM_VERIFIED
+  CLAIM_REJECTED
   GENERAL
 }
 
@@ -80,6 +83,20 @@ enum AnnouncementType {
   UPDATE
 }
 
+enum ClaimMethod {
+  DNS_TXT
+  META_TAG
+  HTML_FILE
+}
+
+enum ClaimStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+  CANCELLED
+}
+
 // ============================================
 // SHARED TABLES
 // ============================================
@@ -104,6 +121,7 @@ model User {
   reviewReplies   ReviewReply[]
   auditLogs       AuditLog[]        @relation("AdminAuditLogs")
   ownedCompany    Company?
+  claimRequests   ClaimRequest[]
 
   @@index([phoneNumber])
   @@index([role])
@@ -124,6 +142,7 @@ model Company {
   averageRating       Float               @default(0)
   totalReviews        Int                 @default(0)
   isVerified          Boolean             @default(false)
+  isClaimed           Boolean             @default(false)
   isActive            Boolean             @default(true)
   isFeatured          Boolean             @default(false)
   verificationStatus  VerificationStatus  @default(NOT_SUBMITTED)
@@ -136,6 +155,7 @@ model Company {
   ownerId             String?             @unique
   owner               User?               @relation(fields: [ownerId], references: [id])
   categories          CompanyCategory[]
+  claimRequests       ClaimRequest[]
 
   @@unique([slug])
   @@index([industry])
@@ -252,6 +272,39 @@ model OtpVerification {
   user        User?      @relation(fields: [userId], references: [id])
 
   @@index([phoneNumber, purpose])
+  @@index([expiresAt])
+}
+
+// ============================================
+// BUSINESS CLAIMING TABLES
+// ============================================
+
+model ClaimRequest {
+  id                String      @id @default(cuid())
+  verificationCode  String      @unique
+  method            ClaimMethod
+  domain            String
+  status            ClaimStatus @default(PENDING)
+  rejectionReason   String?     @db.Text
+  contactName       String
+  contactEmail      String
+  contactPhone      String
+  additionalInfo    String?     @db.Text
+  verifiedAt        DateTime?
+  expiresAt         DateTime
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  companyId         String
+  company           Company     @relation(fields: [companyId], references: [id])
+  claimerId         String
+  claimer           User        @relation(fields: [claimerId], references: [id])
+
+  @@unique([companyId, claimerId])
+  @@index([companyId])
+  @@index([claimerId])
+  @@index([domain])
+  @@index([status])
   @@index([expiresAt])
 }
 
