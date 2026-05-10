@@ -14,7 +14,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 const sortOptions = [
   { value: 'rating', label: 'Highest Rated' },
   { value: 'reviews', label: 'Most Reviewed' },
-  { value: 'recent', label: 'Recently Added' },
+  { value: 'newest', label: 'Recently Added' },
   { value: 'name', label: 'Name A-Z' },
 ];
 
@@ -41,7 +41,7 @@ export default function CompaniesPage() {
   const params = new URLSearchParams({
     page: page.toString(),
     limit: '12',
-    sort: sortBy,
+    sortBy: sortBy,
   });
   if (searchQuery) params.set('q', searchQuery);
   if (selectedIndustry) params.set('industry', selectedIndustry);

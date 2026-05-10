@@ -28,8 +28,9 @@ export default async function handler(
 
     // Rate limit check
     const rateLimitKey = `otp:${phoneNumber}`;
-    const currentCount = otpRateLimitCache.get(rateLimitKey) as number | undefined;
-    if (currentCount !== undefined && currentCount >= MAX_OTP_PER_HOUR) {
+    const currentEntry = otpRateLimitCache.get(rateLimitKey);
+    const currentCount = (currentEntry as { count?: number } | undefined)?.count ?? 0;
+    if (currentCount >= MAX_OTP_PER_HOUR) {
       return badRequest(
         res,
         "Too many OTP requests. Please try again after an hour."
@@ -53,7 +54,7 @@ export default async function handler(
     });
 
     // Update rate limit cache
-    const newCount = (currentCount || 0) + 1;
+    const newCount = currentCount + 1;
     otpRateLimitCache.set(rateLimitKey, { count: newCount });
 
     // Enqueue SEND_OTP job for reliability

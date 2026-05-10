@@ -29,7 +29,14 @@ export default function PhoneInput({
       raw.substring(6, 9),
     ].filter(Boolean);
 
-    onChange(parts.join(' '));
+    const formatted = parts.join(' ');
+    onChange(formatted);
+
+    // Force cursor to end to prevent positioning issues
+    const input = e.target;
+    requestAnimationFrame(() => {
+      input.setSelectionRange(formatted.length, formatted.length);
+    });
   };
 
   return (
@@ -61,7 +68,6 @@ export default function PhoneInput({
           disabled={disabled}
           placeholder={placeholder}
           className="flex-1 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 bg-white focus:outline-none"
-          maxLength={11}
         />
       </div>
       {error && <p className="mt-1.5 text-sm text-red-600">{error}</p>}

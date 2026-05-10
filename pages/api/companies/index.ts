@@ -21,18 +21,18 @@ async function getCompanies(req: NextApiRequest, res: NextApiResponse) {
 
     if (search) {
       where.OR = [
-        { name: { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } },
-        { industry: { contains: search, mode: "insensitive" } },
+        { name: { contains: search } },
+        { description: { contains: search } },
+        { industry: { contains: search } },
       ];
     }
 
     if (industry) {
-      where.industry = { contains: industry, mode: "insensitive" };
+      where.industry = { contains: industry };
     }
 
     if (city) {
-      where.city = { contains: city, mode: "insensitive" };
+      where.city = { contains: city };
     }
 
     if (rating) {
@@ -45,6 +45,8 @@ async function getCompanies(req: NextApiRequest, res: NextApiResponse) {
       orderBy = { totalReviews: "desc" };
     } else if (sortBy === "newest") {
       orderBy = { createdAt: "desc" };
+    } else if (sortBy === "name") {
+      orderBy = { name: "asc" };
     }
 
     const [companies, total] = await Promise.all([

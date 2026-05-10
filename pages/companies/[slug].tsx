@@ -30,7 +30,7 @@ interface CompanyWithStats extends Company {
 export default function CompanyProfilePage() {
   const router = useRouter();
   const { slug } = router.query;
-  const [sortBy, setSortBy] = useState<'recent' | 'highest' | 'lowest'>('recent');
+  const [sortBy, setSortBy] = useState<'newest' | 'highest' | 'lowest'>('newest');
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
 
   const { data, error, isLoading } = useSWR<CompanyWithStats>(
@@ -309,7 +309,7 @@ export default function CompanyProfilePage() {
                 onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
                 className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 bg-white text-gray-700 focus:border-emerald-500 focus:outline-none"
               >
-                <option value="recent">Most Recent</option>
+                <option value="newest">Most Recent</option>
                 <option value="highest">Highest Rated</option>
                 <option value="lowest">Lowest Rated</option>
               </select>

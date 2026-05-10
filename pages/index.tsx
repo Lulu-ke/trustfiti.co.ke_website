@@ -81,7 +81,7 @@ export default function HomePage() {
   );
 
   const { data: reviewsResponse, isLoading: reviewsLoading } = useSWR(
-    '/api/reviews?limit=3&sortBy=recent',
+    '/api/reviews?limit=3&sortBy=newest',
     (url: string) => fetch(url).then(res => res.json())
   );
 

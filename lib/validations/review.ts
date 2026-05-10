@@ -30,11 +30,16 @@ export const reviewReplySchema = z.object({
 
 export const getReviewsSchema = z.object({
   companyId: z.string().optional(),
+  reviewerId: z.string().optional(),
   rating: z.coerce.number().int().min(1).max(5).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(10),
-  sortBy: z.enum(["newest", "highest", "lowest"]).default("newest"),
-});
+  sortBy: z.enum(["newest", "recent", "highest", "lowest"]).default("newest"),
+}).transform((data) => ({
+  ...data,
+  // Normalize 'recent' to 'newest'
+  sortBy: data.sortBy === "recent" ? "newest" as const : data.sortBy,
+}));
 
 export const createCompanySchema = z.object({
   name: z.string().min(2, "Company name must be at least 2 characters"),
@@ -60,7 +65,7 @@ export const getCompaniesSchema = z.object({
   rating: z.coerce.number().min(1).max(5).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(12),
-  sortBy: z.enum(["rating", "reviews", "newest"]).default("rating"),
+  sortBy: z.enum(["rating", "reviews", "newest", "name"]).default("rating"),
 }).transform((data) => ({
   // Support both `q` and `search` params; `q` takes priority
   ...data,

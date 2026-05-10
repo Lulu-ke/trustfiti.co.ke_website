@@ -11,7 +11,7 @@ interface ReviewListProps {
   initialPage?: number;
   companyId?: string;
   reviewerId?: string;
-  sortBy?: 'recent' | 'highest' | 'lowest';
+  sortBy?: 'newest' | 'highest' | 'lowest';
   ratingFilter?: number | null;
   onFlag?: (reviewId: string) => void;
 }
@@ -20,7 +20,7 @@ export default function ReviewList({
   initialPage = 1,
   companyId,
   reviewerId,
-  sortBy = 'recent',
+  sortBy = 'newest',
   ratingFilter = null,
   onFlag,
 }: ReviewListProps) {
@@ -29,7 +29,7 @@ export default function ReviewList({
   const params = new URLSearchParams({
     page: page.toString(),
     limit: '10',
-    sort: sortBy,
+    sortBy: sortBy,
   });
   if (companyId) params.set('companyId', companyId);
   if (reviewerId) params.set('reviewerId', reviewerId);
