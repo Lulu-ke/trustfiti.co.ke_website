@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { cn } from '@/lib/utils';
+import { useSession } from 'next-auth/react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import StarRating from '@/components/reviews/StarRating';
 import CompanySearch from '@/components/companies/CompanySearch';
-import { Send, AlertCircle } from 'lucide-react';
+import AuthPanel from '@/components/auth/AuthPanel';
+import { Send, AlertCircle, Shield } from 'lucide-react';
 import type { Company } from '@/types';
 
 interface ReviewFormProps {
@@ -27,6 +29,7 @@ export default function ReviewForm({
   invitationToken,
   onSuccess,
 }: ReviewFormProps) {
+  const { status } = useSession();
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(
     companyId && companyName
       ? {
@@ -57,6 +60,15 @@ export default function ReviewForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
+  // Auth-on-submit state
+  const [showAuthPanel, setShowAuthPanel] = useState(false);
+  const [pendingReview, setPendingReview] = useState<{
+    companyId: string;
+    rating: number;
+    title: string;
+    content: string;
+  } | null>(null);
+
   const maxContentLength = 2000;
 
   const validate = (): boolean => {
@@ -72,19 +84,20 @@ export default function ReviewForm({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitError('');
-
-    if (!validate()) return;
-
+  const submitReview = useCallback(async (reviewData: {
+    companyId: string;
+    rating: number;
+    title: string;
+    content: string;
+  }) => {
     setIsSubmitting(true);
+    setSubmitError('');
     try {
       const payload: Record<string, string | number> = {
-        companyId: selectedCompany!.id,
-        rating,
-        title: title.trim(),
-        content: content.trim(),
+        companyId: reviewData.companyId,
+        rating: reviewData.rating,
+        title: reviewData.title,
+        content: reviewData.content,
       };
       if (invitationToken) payload.invitationToken = invitationToken;
 
@@ -99,6 +112,8 @@ export default function ReviewForm({
         throw new Error(data.error || 'Failed to submit review');
       }
 
+      setPendingReview(null);
+      setShowAuthPanel(false);
       onSuccess?.();
     } catch (err) {
       setSubmitError(
@@ -107,131 +122,193 @@ export default function ReviewForm({
     } finally {
       setIsSubmitting(false);
     }
+  }, [invitationToken, onSuccess]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitError('');
+
+    if (!validate()) return;
+
+    const reviewData = {
+      companyId: selectedCompany!.id,
+      rating,
+      title: title.trim(),
+      content: content.trim(),
+    };
+
+    // If authenticated, submit directly
+    if (status === 'authenticated') {
+      await submitReview(reviewData);
+      return;
+    }
+
+    // If not authenticated, show auth panel
+    setPendingReview(reviewData);
+    setShowAuthPanel(true);
+  };
+
+  const handleAuthSuccess = useCallback(() => {
+    // After auth succeeds, the session will be available.
+    // Small delay to let NextAuth session update, then submit.
+    if (pendingReview) {
+      // Give NextAuth a moment to update the session
+      setTimeout(() => {
+        submitReview(pendingReview);
+      }, 500);
+    }
+  }, [pendingReview, submitReview]);
+
+  const handleAuthCancel = () => {
+    setShowAuthPanel(false);
+    setPendingReview(null);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {submitError && (
-        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-          <AlertCircle className="h-4 w-4 flex-shrink-0" />
-          {submitError}
+    <div>
+      {showAuthPanel && (
+        <div className="mb-6">
+          <AuthPanel
+            variant="inline"
+            title="Verify to publish your review"
+            subtitle="We need to verify your identity to prevent fake reviews. Enter your phone number to continue."
+            onSuccess={handleAuthSuccess}
+            onCancel={handleAuthCancel}
+          />
         </div>
       )}
 
-      {/* Company Selector */}
-      {!companyId && (
+      <form onSubmit={handleSubmit} className={cn(showAuthPanel && 'opacity-60 pointer-events-none')}>
+        {submitError && (
+          <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            {submitError}
+          </div>
+        )}
+
+        {/* Company Selector */}
+        {!companyId && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Company <span className="text-red-500">*</span>
+            </label>
+            <CompanySearch onSelect={setSelectedCompany} />
+            {selectedCompany && (
+              <p className="mt-1.5 text-sm text-emerald-600 font-medium">
+                Reviewing: {selectedCompany.name}
+              </p>
+            )}
+            {errors.company && (
+              <p className="mt-1.5 text-sm text-red-600">{errors.company}</p>
+            )}
+          </div>
+        )}
+
+        {selectedCompany && !companyId && (
+          <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <p className="text-sm font-medium text-gray-700">
+              {selectedCompany.name}
+            </p>
+            {selectedCompany.industry && (
+              <p className="text-xs text-gray-500">{selectedCompany.industry}</p>
+            )}
+          </div>
+        )}
+
+        {/* Star Rating */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Your Rating <span className="text-red-500">*</span>
+          </label>
+          <div className="flex items-center gap-3">
+            <StarRating
+              value={rating}
+              onChange={setRating}
+              size="lg"
+            />
+            {rating > 0 && (
+              <span className="text-sm text-gray-500">
+                {rating === 1 && 'Poor'}
+                {rating === 2 && 'Bad'}
+                {rating === 3 && 'Average'}
+                {rating === 4 && 'Good'}
+                {rating === 5 && 'Excellent'}
+              </span>
+            )}
+          </div>
+          {errors.rating && (
+            <p className="mt-1.5 text-sm text-red-600">{errors.rating}</p>
+          )}
+        </div>
+
+        {/* Title */}
+        <Input
+          label="Review Title"
+          placeholder="Summarize your experience"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          error={errors.title}
+          maxLength={100}
+        />
+
+        {/* Content */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Company <span className="text-red-500">*</span>
+            Your Review <span className="text-red-500">*</span>
           </label>
-          <CompanySearch onSelect={setSelectedCompany} />
-          {selectedCompany && (
-            <p className="mt-1.5 text-sm text-emerald-600 font-medium">
-              Reviewing: {selectedCompany.name}
-            </p>
-          )}
-          {errors.company && (
-            <p className="mt-1.5 text-sm text-red-600">{errors.company}</p>
-          )}
-        </div>
-      )}
-
-      {selectedCompany && !companyId && (
-        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-          <p className="text-sm font-medium text-gray-700">
-            {selectedCompany.name}
-          </p>
-          {selectedCompany.industry && (
-            <p className="text-xs text-gray-500">{selectedCompany.industry}</p>
-          )}
-        </div>
-      )}
-
-      {/* Star Rating */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Your Rating <span className="text-red-500">*</span>
-        </label>
-        <div className="flex items-center gap-3">
-          <StarRating
-            value={rating}
-            onChange={setRating}
-            size="lg"
-          />
-          {rating > 0 && (
-            <span className="text-sm text-gray-500">
-              {rating === 1 && 'Poor'}
-              {rating === 2 && 'Bad'}
-              {rating === 3 && 'Average'}
-              {rating === 4 && 'Good'}
-              {rating === 5 && 'Excellent'}
-            </span>
-          )}
-        </div>
-        {errors.rating && (
-          <p className="mt-1.5 text-sm text-red-600">{errors.rating}</p>
-        )}
-      </div>
-
-      {/* Title */}
-      <Input
-        label="Review Title"
-        placeholder="Summarize your experience"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        error={errors.title}
-        maxLength={100}
-      />
-
-      {/* Content */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">
-          Your Review <span className="text-red-500">*</span>
-        </label>
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Tell others about your experience with this company..."
-          rows={5}
-          maxLength={maxContentLength}
-          className={cn(
-            'w-full rounded-lg border px-3 py-2 text-sm text-gray-900 placeholder-gray-400',
-            'transition-colors duration-150 resize-none',
-            'focus:outline-none focus:ring-2 focus:ring-offset-0',
-            errors.content
-              ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-              : 'border-gray-300 focus:border-emerald-500 focus:ring-emerald-200'
-          )}
-        />
-        <div className="flex justify-between mt-1.5">
-          {errors.content ? (
-            <p className="text-sm text-red-600">{errors.content}</p>
-          ) : (
-            <span />
-          )}
-          <p
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Tell others about your experience with this company..."
+            rows={5}
+            maxLength={maxContentLength}
             className={cn(
-              'text-xs',
-              content.length > maxContentLength * 0.9
-                ? 'text-red-500'
-                : 'text-gray-400'
+              'w-full rounded-lg border px-3 py-2 text-sm text-gray-900 placeholder-gray-400',
+              'transition-colors duration-150 resize-none',
+              'focus:outline-none focus:ring-2 focus:ring-offset-0',
+              errors.content
+                ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
+                : 'border-gray-300 focus:border-emerald-500 focus:ring-emerald-200'
             )}
-          >
-            {content.length}/{maxContentLength}
-          </p>
+          />
+          <div className="flex justify-between mt-1.5">
+            {errors.content ? (
+              <p className="text-sm text-red-600">{errors.content}</p>
+            ) : (
+              <span />
+            )}
+            <p
+              className={cn(
+                'text-xs',
+                content.length > maxContentLength * 0.9
+                  ? 'text-red-500'
+                  : 'text-gray-400'
+              )}
+            >
+              {content.length}/{maxContentLength}
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Submit */}
-      <Button
-        type="submit"
-        size="lg"
-        loading={isSubmitting}
-        className="w-full"
-      >
-        <Send className="h-4 w-4" />
-        Publish Review
-      </Button>
-    </form>
+        {/* Submit */}
+        <Button
+          type="submit"
+          size="lg"
+          loading={isSubmitting}
+          className="w-full"
+        >
+          <Send className="h-4 w-4" />
+          Publish Review
+        </Button>
+
+        {/* Hint for unauthenticated users */}
+        {status === 'unauthenticated' && !showAuthPanel && (
+          <div className="mt-3 flex items-center justify-center gap-1.5 text-xs text-gray-400">
+            <Shield className="h-3 w-3" />
+            <span>You&apos;ll verify your phone number before publishing</span>
+          </div>
+        )}
+      </form>
+    </div>
   );
 }

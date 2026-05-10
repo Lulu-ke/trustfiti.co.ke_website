@@ -1,48 +1,13 @@
 import React from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 import ReviewForm from '@/components/reviews/ReviewForm';
-import Button from '@/components/ui/Button';
-import { PenSquare, Lock } from 'lucide-react';
-import Link from 'next/link';
+import { PenSquare } from 'lucide-react';
 
 export default function WriteReviewPage() {
-  const { status } = useSession();
   const router = useRouter();
   const { companyId } = router.query;
-
-  if (status === 'loading') {
-    return (
-      <div className="min-h-[80vh] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-emerald-600" />
-      </div>
-    );
-  }
-
-  if (status === 'unauthenticated') {
-    return (
-      <div className="min-h-[80vh] flex items-center justify-center px-4">
-        <div className="text-center max-w-sm">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gray-100 text-gray-400 mb-4">
-            <Lock className="h-7 w-7" />
-          </div>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">
-            Sign in required
-          </h1>
-          <p className="text-gray-500 text-sm mb-6">
-            You need to be signed in to write a review.
-          </p>
-          <Link href={`/login?callbackUrl=${encodeURIComponent(router.asPath)}`}>
-            <Button size="lg" className="w-full">
-              Sign In to Continue
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   const handleSuccess = () => {
     toast.success('Your review has been published!');
