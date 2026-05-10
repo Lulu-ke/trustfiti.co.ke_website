@@ -1,8 +1,9 @@
 import axios from "axios";
 
-const TALKSASA_BASE_URL = "https://api.talksasa.com/v1";
-const TALKSASA_API_KEY = process.env.TALKSASA_API_KEY || "";
-const TALKSASA_SENDER = process.env.TALKSASA_SENDER || "TrustFiti";
+// TalkSasa Bulk SMS OAuth 2.0 API
+const TALKSASA_BASE_URL = process.env.TALKSASA_API_URL || "https://bulksms.talksasa.com/api/v3";
+const TALKSASA_API_TOKEN = process.env.TALKSASA_API_KEY || "";
+const TALKSASA_SENDER = process.env.TALKSASA_SENDER || "TALK-SASA";
 
 interface SendSMSResult {
   success: boolean;
@@ -21,15 +22,16 @@ export async function sendSMS(phone: string, text: string): Promise<SendSMSResul
       },
       {
         headers: {
-          Authorization: `Bearer ${TALKSASA_API_KEY}`,
+          Authorization: `Bearer ${TALKSASA_API_TOKEN}`,
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
       }
     );
 
     return {
       success: true,
-      messageId: response.data?.messageId,
+      messageId: response.data?.data?.id || response.data?.messageId,
     };
   } catch (error: any) {
     console.error("TalkSasa SMS error:", error.response?.data || error.message);

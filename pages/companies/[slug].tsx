@@ -77,6 +77,53 @@ export default function CompanyProfilePage() {
       <Head>
         <title>{company.name} Reviews — TrustFiti</title>
         <meta name="description" content={`Read reviews for ${company.name}. ${company.totalReviews} reviews with ${company.averageRating.toFixed(1)} average rating on TrustFiti.`} />
+        <link rel="canonical" href={`https://trustfiti.co.ke/companies/${company.slug}`} />
+
+        {/* Open Graph */}
+        <meta property="og:title" content={`${company.name} Reviews — TrustFiti`} />
+        <meta property="og:description" content={`${company.totalReviews} reviews with ${company.averageRating.toFixed(1)} average rating`} />
+        <meta property="og:url" content={`https://trustfiti.co.ke/companies/${company.slug}`} />
+        <meta property="og:type" content="business.business" />
+        {company.logo && <meta property="og:image" content={company.logo} />}
+
+        {/* Twitter Card */}
+        <meta name="twitter:title" content={`${company.name} Reviews — TrustFiti`} />
+        <meta name="twitter:description" content={`${company.totalReviews} reviews with ${company.averageRating.toFixed(1)} average rating`} />
+
+        {/* Structured Data: LocalBusiness with AggregateRating */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": company.industry === "Restaurant" || company.industry === "Cafe"
+                ? "Restaurant"
+                : "LocalBusiness",
+              name: company.name,
+              url: `https://trustfiti.co.ke/companies/${company.slug}`,
+              description: company.description || `Read reviews for ${company.name} on TrustFiti`,
+              image: company.logo || "https://trustfiti.co.ke/logo.png",
+              address: company.address
+                ? {
+                    "@type": "PostalAddress",
+                    streetAddress: company.address,
+                    addressLocality: company.city || "",
+                    addressCountry: company.country,
+                  }
+                : undefined,
+              ...(company.website && { sameAs: [company.website] }),
+              aggregateRating: company.totalReviews > 0
+                ? {
+                    "@type": "AggregateRating",
+                    ratingValue: company.averageRating.toFixed(1),
+                    bestRating: "5",
+                    worstRating: "1",
+                    reviewCount: company.totalReviews,
+                  }
+                : undefined,
+            }),
+          }}
+        />
       </Head>
 
       <div>
